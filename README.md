@@ -127,6 +127,7 @@ CampusGuide-RAG-Grounded-Institutional-Knowledge-Assistant/
 |-- tests/                     # Offline retrieval tests
 |-- .github/workflows/ci.yml   # GitHub Actions checks
 |-- requirements.txt
+|-- requirements-local-es.txt
 |-- requirements-ci.txt
 |-- pyproject.toml
 `-- .env.example
@@ -158,6 +159,13 @@ On Windows:
 
 ```bash
 pip install -r requirements.txt
+```
+
+For the Elasticsearch-backed local profile, install the additional embedding
+and reranking dependencies as well:
+
+```bash
+pip install -r requirements-local-es.txt
 ```
 
 ### 4. Configure environment variables
@@ -263,9 +271,11 @@ On Windows PowerShell, if Elasticsearch is installed under `.local` instead:
   -E http.port=9200
 ```
 
-3. In a second terminal, from the repository root, load the indexes:
+3. In a second terminal, from the repository root, install the local ES
+profile and load the indexes:
 
 ```bash
+pip install -r requirements-local-es.txt
 python scripts/bootstrap_structured_data.py
 python scripts/reingest_policies.py
 ```

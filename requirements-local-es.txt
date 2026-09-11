@@ -1,0 +1,6 @@
+# Full local Elasticsearch profile.
+# Install this instead of requirements.txt when rebuilding vector indexes or
+# using Elasticsearch-backed document retrieval locally.
+-r requirements.txt
+sentence-transformers>=5.0.0
+torch>=2.0.0
