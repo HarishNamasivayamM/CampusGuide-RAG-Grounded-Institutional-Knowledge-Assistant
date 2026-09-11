@@ -24,6 +24,7 @@ load_dotenv()
 from sentence_transformers import SentenceTransformer
 from elasticsearch import Elasticsearch
 
+ROOT = Path(__file__).resolve().parents[1]
 ES_URL  = os.getenv("ES_URL",  "http://localhost:9200")
 ES_USER = os.getenv("ES_USER", "elastic")
 ES_PASS = os.getenv("ES_PASS", "")
@@ -35,7 +36,7 @@ es = Elasticsearch(
     ssl_show_warn=False,
 )
 
-IN_FILE = Path("data/processed/Unstructured data/Unstructured chunks k.json")
+IN_FILE = ROOT / "data" / "processed" / "Unstructured data" / "Unstructured chunks k.json"
 INDEX   = "iit_policies"
 MODEL   = "intfloat/e5-large-v2"
 BATCH   = 32

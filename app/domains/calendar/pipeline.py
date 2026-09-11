@@ -118,7 +118,7 @@ def term_from_history(history: list) -> str | None:
 
 
 _CALENDAR_SYSTEM = (
-    "You are an IIT student assistant with access to the academic calendar. "
+    "You are the CampusGuide RAG assistant with access to the IIT academic calendar. "
     "Answer the student's question directly using ONLY the calendar events provided. "
     "If the question mentions a specific date, use it to reason explicitly — for example, "
     "whether that date is before or after a deadline, or whether a break overlaps with it. "

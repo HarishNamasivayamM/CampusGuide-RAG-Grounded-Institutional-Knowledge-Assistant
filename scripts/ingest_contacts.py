@@ -15,13 +15,22 @@ Run from the repo root:
 import csv
 import hashlib
 import json
+import os
 import sys
 from pathlib import Path
 
+from dotenv import load_dotenv
 import requests
-from es_client import ES_URL, ES_USER, ES_PASS, VERIFY
 
-CSV_FILE = Path("data/raw/Contacts data.csv")
+ROOT = Path(__file__).resolve().parents[1]
+load_dotenv(ROOT / ".env")
+
+ES_URL = os.getenv("ES_URL", "http://localhost:9200")
+ES_USER = os.getenv("ES_USER", "elastic")
+ES_PASS = os.getenv("ES_PASS", "")
+VERIFY = os.getenv("ES_VERIFY_CERTS", "false").lower() in {"1", "true", "yes", "on"}
+
+CSV_FILE = ROOT / "data" / "raw" / "Contacts data.csv"
 INDEX    = "iit_contacts"
 
 MAPPING = {

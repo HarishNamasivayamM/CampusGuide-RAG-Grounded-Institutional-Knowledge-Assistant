@@ -206,6 +206,70 @@ Deploy `app/streamlit_app.py` from the repository root. This mode uses the check
 
 ## Running the App
 
+### Local mode with Elasticsearch, FastAPI, and Streamlit
+
+Use this mode when you want all three local services running together:
+
+1. Configure `.env` for Elasticsearch and Groq:
+
+```text
+LLM_PROVIDER=groq
+GROQ_API_KEY=your_groq_key
+GROQ_BASE_URL=https://api.groq.com/openai/v1
+GROQ_MODEL=qwen/qwen3.8-27b
+SEARCH_BACKEND=es
+ES_URL=http://localhost:9200
+ES_USER=elastic
+ES_PASS=
+ES_VERIFY_CERTS=false
+```
+
+2. Start Elasticsearch. Docker is the quickest option:
+
+```bash
+docker run --name campusguide-elasticsearch --rm \
+  -p 9200:9200 \
+  -e discovery.type=single-node \
+  -e xpack.security.enabled=false \
+  -e ES_JAVA_OPTS="-Xms512m -Xmx512m" \
+  docker.elastic.co/elasticsearch/elasticsearch:8.19.21
+```
+
+On Windows PowerShell, if Elasticsearch is installed under `.local` instead:
+
+```powershell
+& ".\.local\elasticsearch-8.19.21\bin\elasticsearch.bat" `
+  -E xpack.security.enabled=false `
+  -E discovery.type=single-node `
+  -E network.host=127.0.0.1 `
+  -E http.port=9200
+```
+
+3. In a second terminal, from the repository root, load the indexes:
+
+```bash
+python scripts/bootstrap_structured_data.py
+python scripts/reingest_policies.py
+```
+
+4. In a third terminal, start the API:
+
+```bash
+uvicorn app.api:app --host 127.0.0.1 --port 8000 --reload
+```
+
+5. In a fourth terminal, start the Streamlit UI:
+
+```bash
+streamlit run app/streamlit_app.py
+```
+
+Open `http://localhost:8501`. The API is at `http://localhost:8000/docs`, and
+Elasticsearch should respond at `http://localhost:9200`.
+
+Streamlit and FastAPI are two interfaces over the same application code;
+Streamlit does not proxy requests through FastAPI.
+
 ### CLI
 
 ```bash
@@ -295,11 +359,13 @@ The repository includes curated data files used by the assistant:
 
 Ingestion scripts are available under `scripts/` for rebuilding Elasticsearch indexes:
 
+- `scripts/bootstrap_structured_data.py` (tuition, calendar, and contacts)
 - `scripts/ingest_contacts.py`
 - `scripts/reingest_policies.py`
-- `scripts/ingest_new_policy_chunks.py`
 
-The app expects Elasticsearch indexes to be available before answering retrieval-backed questions.
+When `SEARCH_BACKEND=es`, run the ingestion scripts before using the app. When
+`SEARCH_BACKEND=local`, the app reads the bundled data files directly and does
+not require Elasticsearch.
 
 ## Deployment
 
