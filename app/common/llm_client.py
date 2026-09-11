@@ -1,139 +1,17 @@
-"""
-common/llm_client.py
-Shared LLM clients:
-  - call_llm / stream_llm  — Theta EdgeCloud (Llama) — used for query rewriting only
-  - call_gpt / stream_gpt  — configured chat provider — used for answer generation and routing
+"""Shared chat-provider clients.
+
+Groq is the default provider through its OpenAI-compatible API. Azure OpenAI
+is retained as an optional provider for deployments that already use it.
 """
 
-import json
 import logging
 import os
 from typing import Generator
 
-import requests
 from openai import AzureOpenAI, OpenAI
 
 logger = logging.getLogger(__name__)
 
-
-def call_llm(
-    messages: list,
-    max_tokens: int = 512,
-    temperature: float = 0.1,
-) -> str:
-    """
-    Call Theta EdgeCloud's streaming SSE endpoint.
-
-    Args:
-        messages:    OpenAI-style list of {role, content} dicts.
-        max_tokens:  Maximum tokens to generate.
-        temperature: Sampling temperature (0.0 for deterministic extraction).
-
-    Returns:
-        Accumulated response string, or "[LLM error: ...]" on failure.
-    """
-    url = os.getenv("THETA_API_URL", "")
-    key = os.getenv("THETA_API_KEY", "")
-
-    if not url or not key:
-        logger.error("THETA_API_URL or THETA_API_KEY not set.")
-        return "[LLM unavailable: credentials not configured]"
-
-    try:
-        resp = requests.post(
-            url,
-            json={
-                "input": {
-                    "messages": messages,
-                    "max_tokens": max_tokens,
-                    "temperature": temperature,
-                }
-            },
-            headers={"Authorization": f"Bearer {key}"},
-            stream=True,
-            timeout=60,
-        )
-        resp.raise_for_status()
-
-        content: list[str] = []
-        for raw_line in resp.iter_lines(decode_unicode=True):
-            if not raw_line or not raw_line.startswith("data:"):
-                continue
-            data = raw_line[5:].strip()
-            if data == "[DONE]":
-                break
-            try:
-                chunk = json.loads(data)
-                piece = chunk["choices"][0].get("delta", {}).get("content") or ""
-                if piece:
-                    content.append(piece)
-            except (json.JSONDecodeError, KeyError, IndexError):
-                continue
-
-        return "".join(content)
-
-    except Exception as exc:
-        logger.error(f"LLM call failed: {exc}")
-        return f"[LLM error: {exc}]"
-
-
-def stream_llm(
-    messages: list,
-    max_tokens: int = 512,
-    temperature: float = 0.1,
-) -> Generator[str, None, None]:
-    """
-    Same SSE endpoint as call_llm but yields each token piece instead of buffering.
-    Used by Streamlit via st.write_stream() for perceived-latency improvement.
-
-    Yields:
-        Individual text pieces as they arrive from the SSE stream.
-        On error, yields a single error string.
-    """
-    url = os.getenv("THETA_API_URL", "")
-    key = os.getenv("THETA_API_KEY", "")
-
-    if not url or not key:
-        logger.error("THETA_API_URL or THETA_API_KEY not set.")
-        yield "[LLM unavailable: credentials not configured]"
-        return
-
-    try:
-        resp = requests.post(
-            url,
-            json={
-                "input": {
-                    "messages": messages,
-                    "max_tokens": max_tokens,
-                    "temperature": temperature,
-                }
-            },
-            headers={"Authorization": f"Bearer {key}"},
-            stream=True,
-            timeout=60,
-        )
-        resp.raise_for_status()
-
-        for raw_line in resp.iter_lines(decode_unicode=True):
-            if not raw_line or not raw_line.startswith("data:"):
-                continue
-            data = raw_line[5:].strip()
-            if data == "[DONE]":
-                break
-            try:
-                chunk = json.loads(data)
-                piece = chunk["choices"][0].get("delta", {}).get("content") or ""
-                if piece:
-                    yield piece
-            except (json.JSONDecodeError, KeyError, IndexError):
-                continue
-
-    except Exception as exc:
-        logger.error(f"LLM stream failed: {exc}")
-        yield f"[LLM error: {exc}]"
-
-
-# ── Configured chat provider ─────────────────────────────────────────────────
 
 def _provider() -> str:
     """Return the configured chat provider, defaulting to Groq when present."""
@@ -172,19 +50,13 @@ def call_gpt(
     max_tokens: int = 512,
     temperature: float = 0.1,
 ) -> str:
-    """
-    Call the configured chat provider with a list of messages.
-    Used for answer generation across all domain pipelines and for routing.
-
-    Returns:
-        Response string, or a provider error string on failure.
-    """
+    """Call the configured chat provider for one buffered response."""
     if not _gpt_credentials_configured():
         logger.error("LLM credentials are not configured for provider %s.", _provider())
-        return "[GPT unavailable: credentials not configured]"
+        return "[LLM unavailable: credentials not configured]"
 
     try:
-        client   = _gpt_client()
+        client = _gpt_client()
         response = client.chat.completions.create(
             model=_gpt_deployment(),
             messages=messages,
@@ -193,8 +65,8 @@ def call_gpt(
         )
         return response.choices[0].message.content or ""
     except Exception as exc:
-        logger.error(f"GPT call failed: {exc}")
-        return f"[GPT error: {exc}]"
+        logger.error("LLM call failed: %s", exc)
+        return f"[LLM error: {exc}]"
 
 
 def stream_gpt(
@@ -202,17 +74,10 @@ def stream_gpt(
     max_tokens: int = 512,
     temperature: float = 0.1,
 ) -> Generator[str, None, None]:
-    """
-    Stream tokens from the configured chat provider.
-    Used by Streamlit via st.write_stream() for perceived-latency improvement.
-
-    Yields:
-        Individual text pieces as they arrive.
-        On error, yields a single error string.
-    """
+    """Stream response text from the configured chat provider."""
     if not _gpt_credentials_configured():
         logger.error("LLM credentials are not configured for provider %s.", _provider())
-        yield "[GPT unavailable: credentials not configured]"
+        yield "[LLM unavailable: credentials not configured]"
         return
 
     try:
@@ -228,5 +93,5 @@ def stream_gpt(
             if chunk.choices and chunk.choices[0].delta.content:
                 yield chunk.choices[0].delta.content
     except Exception as exc:
-        logger.error(f"GPT stream failed: {exc}")
-        yield f"[GPT error: {exc}]"
+        logger.error("LLM stream failed: %s", exc)
+        yield f"[LLM error: {exc}]"

@@ -124,7 +124,11 @@ CampusGuide-RAG-Grounded-Institutional-Knowledge-Assistant/
 |   `-- raw/                   # Contact data
 |-- scripts/                   # Ingestion scripts
 |-- render.yaml                # Render deployment config
+|-- tests/                     # Offline retrieval tests
+|-- .github/workflows/ci.yml   # GitHub Actions checks
 |-- requirements.txt
+|-- requirements-ci.txt
+|-- pyproject.toml
 `-- .env.example
 ```
 
@@ -203,6 +207,20 @@ SEARCH_BACKEND = "local"
 ```
 
 Deploy `app/streamlit_app.py` from the repository root. This mode uses the checked-in tuition, calendar, contacts, and policy files, so no Elasticsearch URL or password is needed.
+
+### Publish this project to your GitHub account
+
+Create an empty public repository named
+`CampusGuide-RAG-Grounded-Institutional-Knowledge-Assistant`, then run from
+the project root:
+
+```bash
+git remote add origin https://github.com/YOUR_GITHUB_USERNAME/CampusGuide-RAG-Grounded-Institutional-Knowledge-Assistant.git
+git push -u origin main
+```
+
+The local `.env` file is ignored and must never be pushed. Add the Groq key
+through Streamlit Community Cloud Secrets instead.
 
 ## Running the App
 
@@ -346,6 +364,15 @@ Response:
   "tuition_state": {},
   "calendar_state": {}
 }
+```
+
+## Quality checks
+
+Run the same checks used by GitHub Actions:
+
+```bash
+python -m compileall -q app scripts tests
+pytest -q
 ```
 
 ## Data and Ingestion
