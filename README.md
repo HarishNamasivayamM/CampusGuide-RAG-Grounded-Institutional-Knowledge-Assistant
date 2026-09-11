@@ -420,7 +420,3 @@ Set the same environment variables from `.env.example` in the Render dashboard.
 - Some workflows require a live Elasticsearch deployment and configured LLM credentials.
 - Source quality depends on the freshness of the indexed IIT policy, calendar, tuition, and contact data.
 - Tuition and calendar flows include clarification handling, but ambiguous questions may still need follow-up.
-
-## Author
-
-Built by
