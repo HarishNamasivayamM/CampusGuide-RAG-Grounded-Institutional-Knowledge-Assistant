@@ -2,7 +2,7 @@
 common/llm_client.py
 Shared LLM clients:
   - call_llm / stream_llm  — Theta EdgeCloud (Llama) — used for query rewriting only
-  - call_gpt / stream_gpt  — Azure OpenAI (GPT-4o)   — used for answer generation and routing
+  - call_gpt / stream_gpt  — configured chat provider — used for answer generation and routing
 """
 
 import json
@@ -133,7 +133,7 @@ def stream_llm(
         yield f"[LLM error: {exc}]"
 
 
-# ── Azure OpenAI (GPT-4o) ─────────────────────────────────────────────────────
+# ── Configured chat provider ─────────────────────────────────────────────────
 
 def _provider() -> str:
     """Return the configured chat provider, defaulting to Groq when present."""
@@ -173,11 +173,11 @@ def call_gpt(
     temperature: float = 0.1,
 ) -> str:
     """
-    Call Azure OpenAI (GPT-4o) with a list of messages.
+    Call the configured chat provider with a list of messages.
     Used for answer generation across all domain pipelines and for routing.
 
     Returns:
-        Response string, or "[GPT error: ...]" on failure.
+        Response string, or a provider error string on failure.
     """
     if not _gpt_credentials_configured():
         logger.error("LLM credentials are not configured for provider %s.", _provider())
@@ -203,7 +203,7 @@ def stream_gpt(
     temperature: float = 0.1,
 ) -> Generator[str, None, None]:
     """
-    Stream tokens from Azure OpenAI (GPT-4o).
+    Stream tokens from the configured chat provider.
     Used by Streamlit via st.write_stream() for perceived-latency improvement.
 
     Yields:

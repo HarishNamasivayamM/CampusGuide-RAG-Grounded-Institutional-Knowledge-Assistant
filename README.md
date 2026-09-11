@@ -53,7 +53,7 @@ Retrieval path:
 - BM25 + vector retrieval
 - Reciprocal Rank Fusion
 - cross-encoder reranking
-- GPT-4o answer generation with source links
+- Configured LLM answer generation with source links
 
 ### Tuition and Fees
 
@@ -64,7 +64,7 @@ Retrieval path:
 - regex-based field extraction
 - structured Elasticsearch filters
 - clarification when school/year/fee type is ambiguous
-- GPT-4o answer formatting over retrieved fee records
+- Configured LLM answer formatting over retrieved fee records
 
 ### Academic Calendar
 
@@ -114,7 +114,7 @@ CampusGuide-RAG-Grounded-Institutional-Knowledge-Assistant/
 |   |-- core/
 |   |   `-- orchestrator.py    # Shared routing and dispatch logic
 |   |-- router/
-|   |   `-- router.py          # GPT-4o domain router
+|   |   `-- router.py          # Configured LLM domain router
 |   |-- handlers/              # Domain handlers
 |   |-- domains/               # Domain-specific pipeline and search logic
 |   `-- common/                # Elasticsearch, LLM, reranking, retrieval utilities
@@ -314,7 +314,7 @@ Set the same environment variables from `.env.example` in the Render dashboard.
 ## Notes and Limitations
 
 - The assistant is scoped to IIT academic information and should not answer unrelated questions.
-- Some workflows require a live Elasticsearch deployment and Azure OpenAI credentials.
+- Some workflows require a live Elasticsearch deployment and configured LLM credentials.
 - Source quality depends on the freshness of the indexed IIT policy, calendar, tuition, and contact data.
 - Tuition and calendar flows include clarification handling, but ambiguous questions may still need follow-up.
 

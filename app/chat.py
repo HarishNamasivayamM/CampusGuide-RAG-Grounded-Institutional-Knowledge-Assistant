@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 app/chat.py
-IIT Student Assistant — CLI entry point.
+CampusGuide RAG — CLI entry point.
 
 Run from the ElasticSearch/ root:
     python -m app.chat
@@ -17,6 +17,7 @@ load_dotenv()
 
 from app.router.router import DOMAIN_DOCUMENTS, DOMAIN_TUITION, DOMAIN_CALENDAR, DOMAIN_CONTACTS
 from app.core.orchestrator import handle_turn
+from app.common.llm_client import _gpt_credentials_configured
 
 SEP = "─" * 64
 
@@ -32,11 +33,11 @@ def _print_router(domains: list):
 # ── Main loop ─────────────────────────────────────────────────────────────────
 
 def main():
-    if not os.getenv("AZURE_OPENAI_ENDPOINT") or not os.getenv("AZURE_OPENAI_KEY"):
-        print("[ERROR] AZURE_OPENAI_ENDPOINT and AZURE_OPENAI_KEY must be set in .env")
+    if not _gpt_credentials_configured():
+        print("[ERROR] Configure the selected LLM provider credentials in .env")
         sys.exit(1)
 
-    print("IIT Student Assistant  (DOCUMENTS · TUITION · CALENDAR · CONTACTS)")
+    print("CampusGuide RAG  (DOCUMENTS · TUITION · CALENDAR · CONTACTS)")
     print("Type 'exit' to quit.\n")
 
     history:        list = []

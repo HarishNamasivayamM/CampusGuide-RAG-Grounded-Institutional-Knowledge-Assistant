@@ -1,12 +1,12 @@
 """
 router/router.py
-LLM-based intent router — maps a user query to one or more domains using GPT-4o.
+LLM-based intent router — maps a user query to one or more domains using the configured provider.
 
 Replaces the previous prototype cosine-similarity approach (e5-large-v2 embeddings)
 which was fragile when query vocabulary did not match prototype vocabulary.
 
 Algorithm:
-  1. Send query to GPT-4o with a zero-shot domain classification prompt.
+  1. Send the query to the configured provider with a zero-shot domain classification prompt.
   2. Parse the returned JSON to get the list of domains.
   3. Return at most 2 domains; multi-domain only when both are genuinely needed.
 """
@@ -93,7 +93,7 @@ Output ONLY valid JSON. No explanation."""
 
 def get_routing_intent(query: str) -> Dict[str, List[str]]:
     """
-    Return the domain(s) that best match the query using GPT-4o classification.
+    Return the domain(s) that best match the query using LLM classification.
 
     Returns:
         {"domains": [...], "needs_clarification": False, "sub_queries": {...}}
