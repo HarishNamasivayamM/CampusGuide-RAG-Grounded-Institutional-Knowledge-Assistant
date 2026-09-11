@@ -4,6 +4,10 @@ Multi-domain AI assistant for Illinois Institute of Technology student informati
 
 This project was built as a practical retrieval workflow rather than a single prompt-only chatbot: it combines domain routing, structured search, hybrid retrieval, reranking, clarification handling, and multiple user interfaces. It can run with Elasticsearch locally or with a bundled in-process search backend for simple public hosting.
 
+## Live Demo
+
+[Open CampusGuide RAG on Streamlit Community Cloud](https://campusguide-rag-grounded-institutional-knowledge-assistant-c4v.streamlit.app/)
+
 ## What It Does
 
 - Answers IIT student questions across four domains: `DOCUMENTS`, `TUITION`, `CALENDAR`, and `CONTACTS`
