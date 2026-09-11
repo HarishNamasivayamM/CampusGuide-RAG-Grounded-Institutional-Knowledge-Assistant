@@ -7,7 +7,9 @@ Run from the ElasticSearch/ root:
 """
 
 import os
+import sys
 import types
+from pathlib import Path
 
 import streamlit as st
 from dotenv import load_dotenv
@@ -32,6 +34,13 @@ def _load_cloud_secrets_into_environment() -> None:
 
 
 _load_cloud_secrets_into_environment()
+
+# Streamlit Cloud can put the entrypoint directory (`app/`) on sys.path
+# without also adding the repository root.  The application uses absolute
+# `app.*` imports, so make the package root explicit for every launch mode.
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
 
 from app.core.orchestrator import handle_turn
 
